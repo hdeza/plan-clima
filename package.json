@@ -34,16 +34,29 @@
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.11.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.12",
     "globals": "^15.9.0",
-    "postcss": "^8.4.47",
+    "postcss": "^8.5.3",
     "svgo": "^3.3.2",
-    "tailwindcss": "^3.4.14",
+    "tailwindcss": "^3.4.17",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.7.0",
     "vite": "^6.3.3"
-  }
+  },
+  "description": "**ClimaTour** is a web application built with Vite and React, designed to provide users with accurate weather forecasts and help them plan their activities accordingly. This project leverages **Framer Motion** for smooth animations and a selection of React components that enhance the user interface (UI).",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hdeza/plan-clima.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hdeza/plan-clima/issues"
+  },
+  "homepage": "https://github.com/hdeza/plan-clima#readme"
 }
