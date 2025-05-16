@@ -60,7 +60,7 @@ export const Login = () => {
                 </button>
 
                 <div className="text-center space-y-2">
-                  <a href="/forgot-password" className="text-white/90 hover:text-white text-sm block">
+                  <a href="/password-recovery" className="text-white/90 hover:text-white text-sm block">
                     Have you forgotten your password?
                   </a>
                   <a href="/signup" className="text-white/90 hover:text-white text-sm block">

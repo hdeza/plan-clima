@@ -1,15 +1,39 @@
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
-import { useState } from "react";
+import { FormEvent } from "react";
+
+interface UserRegistration {
+  firstName: string
+  lastName: string
+  username: string
+  email: string
+  password: string
+  confirmPassword: string
+}
 
 export const SignUp = () => {
-  const [username, setUsername] = useState("")
-    const [password, setPassword] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Lógica de inicio de sesión aquí
-    console.log("Iniciando sesión con:", username);
+
+    const formData = new FormData(e.currentTarget);
+
+    const userData: UserRegistration = {
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      username: formData.get("username") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      confirmPassword: formData.get("confirmPassword") as string,
+    }
+
+    if (userData.password !== userData.confirmPassword) {
+      alert("Passwords do not match");
+      return
+    }
+
+    // Lógica de registro aquí
+    console.log("Registering user", userData);
   }
 
 
@@ -26,29 +50,27 @@ export const SignUp = () => {
             <div className="bg-black/40  backdrop-blur-sm p-8 rounded-lg border-black/25 border-2 shadow-lg">
               <form onSubmit={handleSubmit} className="grid grid-cols-6 gap-4">
                 <div className="col-span-3 col-start-1">
-                  <label htmlFor="username" className="text-white md-text-lg">
+                  <label htmlFor="firstName" className="text-white md-text-lg">
                     First name
                   </label>
                   <input
-                    id="username"
+                    id="firstName"
+                    name="firstName"    
                     type="text"
                     placeholder="Enter your first name here"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
                     className="bg-white/90 rounded-sm w-full" 
                     required
                   />
                 </div>
                 <div className="col-span-3 col-start-4">
-                  <label htmlFor="username" className="text-white">
+                  <label htmlFor="lastName" className="text-white">
                     Lastname
                   </label>
                   <input
-                    id="username"
+                    id="lastName"
+                    name="lastName"
                     type="text"
                     placeholder="Enter your lastname here"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
                     className="bg-white/90 rounded-sm w-full"
                     required
                   />
@@ -59,24 +81,22 @@ export const SignUp = () => {
                   </label>
                   <input
                     id="username"
+                    name="username"
                     type="text"
                     placeholder="Enter your username here"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
                     className="bg-white/90 rounded-sm w-full" 
                     required
                   />
                 </div>
                 <div className="col-span-3 col-start-4">
-                  <label htmlFor="username" className="text-white">
+                  <label htmlFor="email" className="text-white">
                     E-mail
                   </label>
                   <input
-                    id="username"
-                    type="text"
+                    id="email"
+                    type="email"
+                    name="email"
                     placeholder="Enter your e-mail here"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
                     className="bg-white/90 rounded-sm w-full"
                     required
                   />
@@ -89,23 +109,21 @@ export const SignUp = () => {
                   <input
                     id="password"
                     type="password"
+                    name="password"
                     placeholder="••••••••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     className="bg-white/90 rounded-sm w-full"
                     required
                   />
                 </div>
                 <div className="col-span-3 ">
-                  <label htmlFor="password" className="text-white">
+                  <label htmlFor="confirmPassword" className="text-white">
                     Confirm password
                   </label>
                   <input
-                    id="password"
-                    type="password"
+                    id="confirmPassword"
+                    type="confirmPassword"
+                    name="confirmPassword"
                     placeholder="••••••••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     className="bg-white/90 rounded-sm w-full"
                     required
                   />
@@ -120,7 +138,7 @@ export const SignUp = () => {
 
                 <div className="text-center space-y-2 col-span-6">
                   <a
-                    href="/forgot-password"
+                    href="/login"
                     className="text-white/90 hover:text-white text-sm block"
                   >
                     Already have an account?
