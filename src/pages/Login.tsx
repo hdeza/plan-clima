@@ -1,14 +1,17 @@
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica de inicio de sesión aquí
+    navigate("/itinerary-history");
     console.log("Iniciando sesión con:", username);
   }
 
