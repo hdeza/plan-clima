@@ -1,16 +1,27 @@
+import { AuthContext } from "@/contexts/AuthProvider";
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const authContext = useContext(AuthContext);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica de inicio de sesión aquí
-    console.log("Iniciando sesión con:", username);
-  }
+    if (authContext && authContext.login) {
+      authContext.login(email, password);
+      console.log("Iniciando sesión con:", email);
+    } else {
+      console.error("AuthContext or login function is not available.");
+    }
+    navigate("/itinerary-list");
+  } 
 
 
   return (
@@ -26,15 +37,15 @@ export const Login = () => {
             <div className="bg-black/40  backdrop-blur-sm p-8 rounded-lg border-black/25 border-2 shadow-lg">
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2">
                 <div className="grid">
-                  <label htmlFor="username" className="text-white">
-                    Username
+                  <label htmlFor="email" className="text-white">
+                    E-mail
                   </label>
                   <input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username here"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email here"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="bg-white/90 rounded-sm"
                     required
                   />

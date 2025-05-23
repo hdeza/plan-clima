@@ -1,17 +1,20 @@
+import { AuthContext } from "@/contexts/AuthProvider";
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
-import { FormEvent } from "react";
+import { FormEvent, useContext, useState } from "react";
 
-interface UserRegistration {
-  firstName: string
-  lastName: string
-  username: string
+export interface UserRegistration {
   email: string
   password: string
-  confirmPassword: string
+  firstName: string
+  lastname: string
 }
 
 export const SignUp = () => {
+  const authContext = useContext(AuthContext);
+  const [ confirmPassword, setConfirmPassword ] = useState("");
+  const [ username, setUsername ] = useState("");
+
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,20 +23,25 @@ export const SignUp = () => {
 
     const userData: UserRegistration = {
       firstName: formData.get("firstName") as string,
-      lastName: formData.get("lastName") as string,
-      username: formData.get("username") as string,
+      lastname: formData.get("lastName") as string,
       email: formData.get("email") as string,
-      password: formData.get("password") as string,
-      confirmPassword: formData.get("confirmPassword") as string,
+      password: formData.get("password") as string
     }
 
-    if (userData.password !== userData.confirmPassword) {
+    if (userData.password !== confirmPassword) {
       alert("Passwords do not match");
       return
     }
 
+    if (authContext && authContext.register) {
+      authContext.register(userData.email, userData.password, userData.firstName, userData.lastname);
+      console.log("Registering user.");
+    } else {
+      console.error("AuthContext or register function is not available.");
+    }
+
     // Lógica de registro aquí
-    console.log("Registering user", userData);
+    console.log("Registering user.");
   }
 
 
@@ -63,12 +71,12 @@ export const SignUp = () => {
                   />
                 </div>
                 <div className="col-span-3 col-start-4">
-                  <label htmlFor="lastName" className="text-white">
+                  <label htmlFor="lastname" className="text-white">
                     Lastname
                   </label>
                   <input
-                    id="lastName"
-                    name="lastName"
+                    id="lastname"
+                    name="lastname"
                     type="text"
                     placeholder="Enter your lastname here"
                     className="bg-white/90 rounded-sm w-full"
@@ -83,6 +91,8 @@ export const SignUp = () => {
                     id="username"
                     name="username"
                     type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter your username here"
                     className="bg-white/90 rounded-sm w-full" 
                     required
@@ -121,8 +131,10 @@ export const SignUp = () => {
                   </label>
                   <input
                     id="confirmPassword"
-                    type="confirmPassword"
+                    type="password"
                     name="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••••••••"
                     className="bg-white/90 rounded-sm w-full"
                     required
