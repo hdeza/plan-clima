@@ -1,6 +1,8 @@
 import { AuthContext } from "@/contexts/AuthProvider";
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
+import { Alert } from "@mui/material";
+import { set } from "lodash";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +11,7 @@ export const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [alert, setAlert] = useState("");
 
   const authContext = useContext(AuthContext);
 
@@ -19,11 +22,17 @@ export const Login = () => {
         await authContext.login(email, password);
         // If login is successful, the user state will be updated by onAuthStateChanged
         // and we can navigate to the home page
-        navigate("/");
+        setAlert("Login successful");
+        setTimeout(() => {
+          setAlert("");
+          navigate("/");
+        }, 2000); // Clear alert after 3 seconds
       } else {
+        setAlert("Verify your credentials and try again.");
         console.error("AuthContext or login function is not available.");
       }
     } catch (error) {
+      setAlert("Login failed. Plase try again.");
       console.error("Error during login:", error);
       // You might want to show an error message to the user here
     }
@@ -42,7 +51,7 @@ export const Login = () => {
             </div>
 
             <div className="p-8 border-2 rounded-lg shadow-lg bg-black/40 backdrop-blur-sm border-black/25">
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2 m-3">
                 <div className="grid">
                   <label htmlFor="email" className="text-white">
                     E-mail
@@ -97,6 +106,14 @@ export const Login = () => {
                   </a>
                 </div>
               </form>
+              {alert && (
+                <Alert
+                  severity={alert.includes("successful") ? "success" : "error"}
+                  variant="outlined"
+                >
+                  {alert}
+                </Alert>
+              )}
             </div>
           </div>
         </div>

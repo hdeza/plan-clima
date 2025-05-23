@@ -47,7 +47,12 @@ export const SignUp = () => {
           userData.lastname
         );
         console.log("Registration successful");
-        navigate("/login"); // Navigate to login page after successful registration
+        setAlert("User registered successfully");
+        setTimeout(() => {
+          setAlert("");
+          navigate("/login"); // Navigate to login page after successful registration
+        }, 3000); // Clear alert after 3 seconds
+        
       } catch (error) {
         console.error("Registration failed:", error);
         setAlert("Registration failed. Please try again.");
