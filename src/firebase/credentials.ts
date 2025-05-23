@@ -13,7 +13,7 @@ const firebaseConfig = {
   storageBucket: "plan-clima.firebasestorage.app",
   messagingSenderId: "1040151029740",
   appId: "1:1040151029740:web:8feb34e2b60b9e457982c9",
-  measurementId: "G-JYTS2S11RS"
+  measurementId: "G-JYTS2S11RS",
 };
 
 // Initialize Firebase

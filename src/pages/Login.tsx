@@ -7,23 +7,27 @@ import { useNavigate } from "react-router-dom";
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const authContext = useContext(AuthContext);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Lógica de inicio de sesión aquí
-    if (authContext && authContext.login) {
-      authContext.login(email, password);
-      console.log("Iniciando sesión con:", email);
-      navigate("/itinerary-history");
-    } else {
-      console.error("AuthContext or login function is not available.");
+    try {
+      if (authContext && authContext.login) {
+        await authContext.login(email, password);
+        // If login is successful, the user state will be updated by onAuthStateChanged
+        // and we can navigate to the home page
+        navigate("/");
+      } else {
+        console.error("AuthContext or login function is not available.");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      // You might want to show an error message to the user here
     }
-    
   };
-
 
   return (
     <>
@@ -49,7 +53,7 @@ export const Login = () => {
                     placeholder="Enter your email here"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="bg-white/90 rounded-sm"
+                    className="rounded-sm bg-white/90"
                     required
                   />
                 </div>
@@ -58,26 +62,37 @@ export const Login = () => {
                   <label htmlFor="password" className="text-white">
                     Password
                   </label>
-                  <input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-sm bg-white/90"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full rounded-sm bg-white/90"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute text-gray-600 -translate-y-1/2 right-2 top-1/2 hover:text-gray-800"
+                    >
+                      {showPassword ? "👁️" : "👁️‍🗨️"}
+                    </button>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  onClick={() => (window.location.href = "/")}
                   className="w-full py-2 font-medium text-white rounded-sm bg-amber-500 hover:bg-amber-600"
                 >
                   Log In
                 </button>
-                <div className="text-center space-y-2">
-                  <a href="/signup" className="text-white/90 hover:text-white text-sm block">
+                <div className="space-y-2 text-center">
+                  <a
+                    href="/signup"
+                    className="block text-sm text-white/90 hover:text-white"
+                  >
                     Sign Up?
                   </a>
                 </div>
