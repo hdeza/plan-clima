@@ -17,10 +17,11 @@ export const Login = () => {
     if (authContext && authContext.login) {
       authContext.login(email, password);
       console.log("Iniciando sesión con:", email);
+      navigate("/itinerary-history");
     } else {
       console.error("AuthContext or login function is not available.");
     }
-    navigate("/itinerary-history");
+    
   };
 
 

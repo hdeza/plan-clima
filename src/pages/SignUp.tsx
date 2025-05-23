@@ -1,20 +1,21 @@
 import { AuthContext } from "@/contexts/AuthProvider";
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
+import { Alert } from "@mui/material";
 import { FormEvent, useContext, useState } from "react";
 
 export interface UserRegistration {
-  email: string
-  password: string
-  firstName: string
-  lastname: string
+  email: string;
+  password: string;
+  firstName: string;
+  lastname: string;
 }
 
 export const SignUp = () => {
   const authContext = useContext(AuthContext);
-  const [ confirmPassword, setConfirmPassword ] = useState("");
-  const [ username, setUsername ] = useState("");
-
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [alert, setAlert] = useState("");
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,27 +24,35 @@ export const SignUp = () => {
 
     const userData: UserRegistration = {
       firstName: formData.get("firstName") as string,
-      lastname: formData.get("lastName") as string,
+      lastname: formData.get("lastname") as string,
       email: formData.get("email") as string,
-      password: formData.get("password") as string
-    }
+      password: formData.get("password") as string,
+    };
 
     if (userData.password !== confirmPassword) {
-      alert("Passwords do not match");
-      return
+      setAlert("Passwords do not match");
+      return;
     }
 
     if (authContext && authContext.register) {
-      authContext.register(userData.email, userData.password, userData.firstName, userData.lastname);
+      authContext.register(
+        userData.email,
+        userData.password,
+        userData.firstName,
+        userData.lastname
+      );
       console.log("Registering user.");
+      setAlert("User registered successfully");
+      setTimeout(() => {
+        setAlert("");
+      }, 2000);
     } else {
       console.error("AuthContext or register function is not available.");
     }
 
     // Lógica de registro aquí
     console.log("Registering user.");
-  }
-
+  };
 
   return (
     <>
@@ -52,7 +61,9 @@ export const SignUp = () => {
         <div className="flex flex-1 items-center ">
           <div className="w-full max-w-lg">
             <div className="mb-5">
-              <h2 className="text-4xl font-serif font-bold text-orange-500">REGISTER</h2>
+              <h2 className="text-4xl font-serif font-bold text-orange-500">
+                REGISTER
+              </h2>
             </div>
 
             <div className="bg-black/40  backdrop-blur-sm p-8 rounded-lg border-black/25 border-2 shadow-lg">
@@ -63,10 +74,10 @@ export const SignUp = () => {
                   </label>
                   <input
                     id="firstName"
-                    name="firstName"    
+                    name="firstName"
                     type="text"
                     placeholder="Enter your first name here"
-                    className="bg-white/90 rounded-sm w-full" 
+                    className="bg-white/90 rounded-sm w-full"
                     required
                   />
                 </div>
@@ -94,7 +105,7 @@ export const SignUp = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter your username here"
-                    className="bg-white/90 rounded-sm w-full" 
+                    className="bg-white/90 rounded-sm w-full"
                     required
                   />
                 </div>
@@ -147,6 +158,7 @@ export const SignUp = () => {
                 >
                   Sign up
                 </button>
+                  
 
                 <div className="text-center space-y-2 col-span-6">
                   <a
@@ -155,9 +167,13 @@ export const SignUp = () => {
                   >
                     Already have an account?
                   </a>
-                
                 </div>
               </form>
+              {
+              alert && (
+                    <Alert className="pt-3" severity={alert.includes('registered') ? 'success': 'error'} variant="outlined">{alert}</Alert>
+                  )
+              }
             </div>
           </div>
         </div>
