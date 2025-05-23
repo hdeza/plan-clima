@@ -80,7 +80,7 @@ export default function Main() {
           your city
         </motion.p>
         <motion.div variants={textVariants} className="pt-8">
-          <Link to="/forecast">
+          <Link to="/login">
             <motion.button
               className="flex gap-2 items-center bg-white/30 rounded-full p-2 shadow-md"
               whileHover={{ scale: 1.1 }}

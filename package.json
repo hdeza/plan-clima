@@ -18,6 +18,7 @@
     "@types/lodash": "^4.17.17",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "firebase": "^11.7.3",
     "flowbite": "^2.5.2",
     "flowbite-react": "^0.10.2",
     "framer-motion": "^11.11.9",

@@ -1,19 +1,28 @@
+import { AuthContext } from "@/contexts/AuthProvider";
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const authContext = useContext(AuthContext);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica de inicio de sesión aquí
+    if (authContext && authContext.login) {
+      authContext.login(email, password);
+      console.log("Iniciando sesión con:", email);
+    } else {
+      console.error("AuthContext or login function is not available.");
+    }
     navigate("/itinerary-history");
-    console.log("Iniciando sesión con:", username);
   };
+
 
   return (
     <>
@@ -30,16 +39,16 @@ export const Login = () => {
             <div className="p-8 border-2 rounded-lg shadow-lg bg-black/40 backdrop-blur-sm border-black/25">
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2">
                 <div className="grid">
-                  <label htmlFor="username" className="text-white">
-                    Username
+                  <label htmlFor="email" className="text-white">
+                    E-mail
                   </label>
                   <input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username here"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="rounded-sm bg-white/90"
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email here"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-white/90 rounded-sm"
                     required
                   />
                 </div>
@@ -66,18 +75,8 @@ export const Login = () => {
                 >
                   Log In
                 </button>
-
-                <div className="space-y-2 text-center">
-                  <a
-                    href="/forgot-password"
-                    className="block text-sm text-white/90 hover:text-white"
-                  >
-                    Have you forgotten your password?
-                  </a>
-                  <a
-                    href="/signup"
-                    className="block text-sm text-white/90 hover:text-white"
-                  >
+                <div className="text-center space-y-2">
+                  <a href="/signup" className="text-white/90 hover:text-white text-sm block">
                     Sign Up?
                   </a>
                 </div>
