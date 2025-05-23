@@ -3,7 +3,7 @@ import HomePage from "./pages/HomePage";
 import WeatherForecast from "./pages/WeatherForecast";
 import { Login } from "./pages/Login";
 import { SignUp } from "./pages/SignUp";
-import { ItineraryHistory } from "./pages/ItineraryHistory";
+import { AuthProvider } from "./contexts/AuthProvider";
 
 const router = createBrowserRouter([
   {
@@ -31,7 +31,9 @@ const router = createBrowserRouter([
 function App() {
   return (
     <>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </>
   );
 }

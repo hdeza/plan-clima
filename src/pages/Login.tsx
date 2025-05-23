@@ -1,43 +1,53 @@
+import { AuthContext } from "@/contexts/AuthProvider";
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const authContext = useContext(AuthContext);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica de inicio de sesión aquí
+    if (authContext && authContext.login) {
+      authContext.login(email, password);
+      console.log("Iniciando sesión con:", email);
+    } else {
+      console.error("AuthContext or login function is not available.");
+    }
     navigate("/itinerary-history");
-    console.log("Iniciando sesión con:", username);
-  }
+  };
 
 
   return (
     <>
       <Header isInHome={false} />
       <div className="flex flex-col items-center justify-center h-svh bg-cover bg-no-repeat bg-center bg-[url('src/assets/Cartagena_login.jpg')]">
-        <div className="flex-1 flex items-center">
+        <div className="flex items-center flex-1">
           <div className="w-full max-w-lg">
             <div className="mb-4 ">
-              <h2 className="text-4xl font-serif font-bold text-white">SIGN IN</h2>
+              <h2 className="font-serif text-4xl font-bold text-white">
+                SIGN IN
+              </h2>
             </div>
 
-            <div className="bg-black/40  backdrop-blur-sm p-8 rounded-lg border-black/25 border-2 shadow-lg">
+            <div className="p-8 border-2 rounded-lg shadow-lg bg-black/40 backdrop-blur-sm border-black/25">
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2">
                 <div className="grid">
-                  <label htmlFor="username" className="text-white">
-                    Username
+                  <label htmlFor="email" className="text-white">
+                    E-mail
                   </label>
                   <input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username here"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email here"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     className="bg-white/90 rounded-sm"
                     required
                   />
@@ -53,19 +63,19 @@ export const Login = () => {
                     placeholder="••••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-white/90 rounded-sm"
+                    className="rounded-sm bg-white/90"
                     required
                   />
                 </div>
 
-                <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 rounded-sm">
+                <button
+                  type="submit"
+                  onClick={() => (window.location.href = "/")}
+                  className="w-full py-2 font-medium text-white rounded-sm bg-amber-500 hover:bg-amber-600"
+                >
                   Log In
                 </button>
-
                 <div className="text-center space-y-2">
-                  <a href="/forgot-password" className="text-white/90 hover:text-white text-sm block">
-                    Have you forgotten your password?
-                  </a>
                   <a href="/signup" className="text-white/90 hover:text-white text-sm block">
                     Sign Up?
                   </a>
@@ -75,8 +85,7 @@ export const Login = () => {
           </div>
         </div>
       </div>
-      <Footer/>
-    
+      <Footer />
     </>
   );
 };

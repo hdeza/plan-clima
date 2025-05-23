@@ -10,11 +10,12 @@ import React from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export const ItineraryHistory = () => {
-  const [expanded, setExpanded] = React.useState<string | false>(false)
+  const [expanded, setExpanded] = React.useState<string | false>(false);
 
-  const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
-    setExpanded(isExpanded ? panel : false)
-  }
+  const handleChange =
+    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+      setExpanded(isExpanded ? panel : false);
+    };
 
   const itineraries = [
     { id: "panel8", title: "ITINERARIO 8" },
@@ -25,16 +26,20 @@ export const ItineraryHistory = () => {
     { id: "panel3", title: "ITINERARIO 3" },
     { id: "panel2", title: "ITINERARIO 2" },
     { id: "panel1", title: "ITINERARIO 1" },
-  ]
+  ];
 
   return (
     <>
       <Header isInHome={false} />
       <div className="flex justify-center min-h-svh bg-cover bg-center bg-[url('src/assets/buritaca.jpg')]">
-        <div className="w-full max-w-4xl my-16 mx-auto px-4 md:px-6">
-          <div className="flex justify-between items-center my-8">
-            <h2 className="text-4xl font-serif font-bold text-white">ITINERATY HISTORY</h2>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md">Cerrar sesión</button>
+        <div className="w-full max-w-4xl px-4 mx-auto my-16 md:px-6">
+          <div className="flex items-center justify-between my-8">
+            <h2 className="font-serif text-4xl font-bold text-white">
+              ITINERATY HISTORY
+            </h2>
+            <button className="px-4 py-2 text-white bg-orange-500 rounded-md hover:bg-orange-600">
+              Cerrar sesión
+            </button>
           </div>
 
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
