@@ -27,7 +27,7 @@ export const Login = () => {
   return (
     <>
       <Header isInHome={false} />
-      <div className="flex flex-col items-center justify-center h-svh bg-cover bg-no-repeat bg-center bg-[url('src/assets/Cartagena_login.webp')]">
+      <div className="flex flex-col items-center justify-center h-svh bg-cover bg-no-repeat bg-center bg-[url('src/assets/Cartagena_login.jpg')]">
         <div className="flex items-center flex-1">
           <div className="w-full max-w-lg">
             <div className="mb-4 ">
