@@ -22,6 +22,10 @@ const router = createBrowserRouter([
     path: "/signup",
     element: <SignUp />,
   },
+  {
+    path: "/itinerary-history",
+    element: <ItineraryHistory />,
+  },
 ]);
 
 function App() {

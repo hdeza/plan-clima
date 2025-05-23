@@ -20,21 +20,23 @@ export const Login = () => {
     } else {
       console.error("AuthContext or login function is not available.");
     }
-    navigate("/itinerary-list");
-  } 
+    navigate("/itinerary-history");
+  };
 
 
   return (
     <>
       <Header isInHome={false} />
       <div className="flex flex-col items-center justify-center h-svh bg-cover bg-no-repeat bg-center bg-[url('src/assets/Cartagena_login.webp')]">
-        <div className="flex-1 flex items-center">
+        <div className="flex items-center flex-1">
           <div className="w-full max-w-lg">
             <div className="mb-4 ">
-              <h2 className="text-4xl font-serif font-bold text-white">SIGN IN</h2>
+              <h2 className="font-serif text-4xl font-bold text-white">
+                SIGN IN
+              </h2>
             </div>
 
-            <div className="bg-black/40  backdrop-blur-sm p-8 rounded-lg border-black/25 border-2 shadow-lg">
+            <div className="p-8 border-2 rounded-lg shadow-lg bg-black/40 backdrop-blur-sm border-black/25">
               <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2">
                 <div className="grid">
                   <label htmlFor="email" className="text-white">
@@ -61,15 +63,18 @@ export const Login = () => {
                     placeholder="••••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="bg-white/90 rounded-sm"
+                    className="rounded-sm bg-white/90"
                     required
                   />
                 </div>
 
-                <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 rounded-sm">
+                <button
+                  type="submit"
+                  onClick={() => (window.location.href = "/")}
+                  className="w-full py-2 font-medium text-white rounded-sm bg-amber-500 hover:bg-amber-600"
+                >
                   Log In
                 </button>
-
                 <div className="text-center space-y-2">
                   <a href="/signup" className="text-white/90 hover:text-white text-sm block">
                     Sign Up?
@@ -80,8 +85,7 @@ export const Login = () => {
           </div>
         </div>
       </div>
-      <Footer/>
-    
+      <Footer />
     </>
   );
 };
