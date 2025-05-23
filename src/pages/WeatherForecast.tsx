@@ -4,10 +4,13 @@ import { debounce } from "lodash";
 import Header from "@/layouts/Header";
 import {
   searchCities,
-  processCompleteTrip,
   validateTripData,
   type CityResult,
   type Coordenadas,
+  generateItinerary,
+  predictTemperature,
+  type ClimaFormatter,
+  getWeatherData,
 } from "@/lib/api";
 
 // Interfaces locales para el componente
@@ -17,28 +20,192 @@ interface ItineraryInfo {
   days: number;
 }
 
-// Weather Component - Mock
+// Weather Component - Soft Pastel Design
 const WeatherComponent: React.FC<{ dataInfo: ItineraryInfo }> = ({
   dataInfo,
 }) => (
-  <div className="p-4 bg-white rounded-lg shadow-md">
-    <h3 className="mb-2 text-xl font-bold">Weather for {dataInfo.city}</h3>
-    <p>Predicted Temperature: {dataInfo.temperature}°C</p>
-    <p>Duration: {dataInfo.days} days</p>
-  </div>
-);
-
-// Itinerary Component - Mock
-const ItineraryComponent: React.FC<{ dataItinerary: string }> = ({
-  dataItinerary,
-}) => (
-  <div className="p-4 mt-4 bg-white rounded-lg shadow-md">
-    <h3 className="mb-2 text-xl font-bold">Your Itinerary</h3>
-    <div className="leading-relaxed text-gray-700 whitespace-pre-wrap">
-      {dataItinerary}
+  <div className="p-6 mb-8 border border-blue-200 shadow-2xl rounded-2xl bg-gradient-to-r from-blue-100 via-purple-100 to-green-100">
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="mb-2 text-2xl font-bold text-blue-900">
+          Weather in {dataInfo.city}
+        </h3>
+        <p className="mb-1 text-4xl font-bold text-blue-700">
+          {dataInfo.temperature}°C
+        </p>
+        <p className="text-base text-blue-600 opacity-80">
+          Perfect for exploring!
+        </p>
+      </div>
+      <div className="text-right">
+        <p className="text-lg font-medium text-blue-800">Duration</p>
+        <p className="text-2xl font-bold text-blue-700">{dataInfo.days} Days</p>
+      </div>
     </div>
   </div>
 );
+
+// Itinerary Component - Soft Pastel Travel Design
+const ItineraryComponent: React.FC<{ dataItinerary: string }> = ({
+  dataItinerary,
+}) => {
+  // Split the itinerary into days
+  const days = dataItinerary
+    .split("\n\n")
+    .filter((day) => day.trim().toLowerCase().startsWith("day"));
+
+  return (
+    <div className="p-6 mt-6 border border-blue-100 shadow-2xl bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-2xl">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-3xl font-extrabold text-blue-900">
+          Your Adventure Awaits
+        </h3>
+        <div className="flex items-center space-x-2">
+          <svg
+            className="w-6 h-6 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
+          </svg>
+          <span className="text-sm font-medium text-blue-500">
+            Travel Itinerary
+          </span>
+        </div>
+      </div>
+
+      <div className="space-y-10">
+        {days.map((day, index) => {
+          const [title, ...content] = day.split("\n");
+          const dayNumber = title.match(/\d+/)?.[0] || (index + 1).toString();
+          return (
+            <div
+              key={index}
+              className="relative overflow-hidden transition-all duration-300 border border-blue-100 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 via-white to-green-50 hover:shadow-2xl"
+            >
+              {/* Day Header */}
+              <div className="flex items-center p-6 bg-gradient-to-r from-blue-200 via-purple-200 to-green-200">
+                <div className="flex items-center justify-center w-10 h-10 mr-4 text-xl font-bold text-white bg-blue-400 rounded-full shadow bg-opacity-80">
+                  {dayNumber}
+                </div>
+                <h4 className="text-xl font-bold text-blue-900">{title}</h4>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-4">
+                {content.map((paragraph, pIndex) => (
+                  <div key={pIndex} className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    </div>
+                    <p className="leading-relaxed text-gray-700">{paragraph}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Decorative Elements */}
+              <div className="absolute top-0 right-0 w-24 h-24 transform translate-x-10 -translate-y-10">
+                <div className="w-full h-full bg-blue-200 rounded-full opacity-10"></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer with Travel Tips */}
+      <div className="p-6 mt-10 border border-blue-100 bg-blue-50 rounded-xl">
+        <div className="flex items-center mb-4 space-x-3">
+          <svg
+            className="w-6 h-6 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <h4 className="text-lg font-semibold text-blue-900">Travel Tips</h4>
+        </div>
+        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <li className="flex items-center space-x-2 text-blue-700">
+            <svg
+              className="w-5 h-5 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span>Pack comfortable walking shoes</span>
+          </li>
+          <li className="flex items-center space-x-2 text-blue-700">
+            <svg
+              className="w-5 h-5 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span>Bring a reusable water bottle</span>
+          </li>
+          <li className="flex items-center space-x-2 text-blue-700">
+            <svg
+              className="w-5 h-5 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span>Don't forget your camera</span>
+          </li>
+          <li className="flex items-center space-x-2 text-blue-700">
+            <svg
+              className="w-5 h-5 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span>Check local weather forecast</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+};
 
 const MainPredictionComponent: React.FC = () => {
   // State variables
@@ -140,20 +307,50 @@ const MainPredictionComponent: React.FC = () => {
         days: dataInfo.days,
       });
 
-      // Use the complete processing function from lib/api.ts
-      const result = await processCompleteTrip(
-        dataInfo.city,
-        coordinateCitySelected,
-        dataInfo.days
-      );
+      // Get current date in YYYY-MM-DD format
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}-${(today.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
-      // Update component state with results
+      // First, get the weather data from Meteostat
+      const weatherData = await getWeatherData(
+        coordinateCitySelected,
+        formattedDate
+      );
+      const weatherInfo = weatherData.data[0];
+
+      // Prepare data for temperature prediction
+      const climaData: ClimaFormatter = {
+        tavg: weatherInfo.tavg,
+        tmin: weatherInfo.tmin,
+        tmax: weatherInfo.tmax,
+        prcp: weatherInfo.prcp,
+        wdir: weatherInfo.wdir,
+        wspd: weatherInfo.wspd,
+        pres: weatherInfo.pres,
+        latitude: coordinateCitySelected.lat,
+        longitude: coordinateCitySelected.lng,
+      };
+
+      // Get temperature prediction
+      const temperatureResponse = await predictTemperature(climaData);
+      const predictedTemperature = temperatureResponse.temperatura_predicha;
+
+      // Update the temperature in the state
       setDataInfo((prev) => ({
         ...prev,
-        temperature: result.predictedTemperature,
+        temperature: predictedTemperature,
       }));
 
-      setDataItinerary(result.itinerary);
+      // Generate itinerary with the predicted temperature
+      const itinerary = await generateItinerary({
+        city: dataInfo.city,
+        temperature: predictedTemperature,
+        days: dataInfo.days,
+      });
+
+      setDataItinerary(itinerary);
       setLoading(false);
       setShowData(true);
 

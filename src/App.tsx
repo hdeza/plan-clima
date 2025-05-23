@@ -4,6 +4,7 @@ import WeatherForecast from "./pages/WeatherForecast";
 import { Login } from "./pages/Login";
 import { SignUp } from "./pages/SignUp";
 import { AuthProvider } from "./contexts/AuthProvider";
+import { ItineraryHistory } from "./pages/ItineraryHistory";
 
 const router = createBrowserRouter([
   {

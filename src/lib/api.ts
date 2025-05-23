@@ -48,10 +48,6 @@ const WEATHER_CONFIG = {
   API_HOST: "meteostat.p.rapidapi.com",
 };
 
-// URL base para tu backend - configúrala según tu entorno
-const BACKEND_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
-
 // ==================== FUNCIONES DE UTILIDAD ====================
 
 /**
@@ -111,21 +107,43 @@ export const getWeatherData = async (
       headers,
     });
 
-    console.log("Weather data received:", response);
-    return response;
+    if (!response.data || response.data.length === 0) {
+      throw new Error("No weather data available");
+    }
+
+    // Get the most recent weather data
+    const weatherInfo = response.data[0];
+
+    // Format the data to match our needs with proper precision
+    const formattedData: WeatherResponse = {
+      data: [
+        {
+          tavg: Number(weatherInfo.tavg?.toFixed(1) || "25.5"), // Temperature average
+          tmin: Number(weatherInfo.tmin?.toFixed(1) || "20.0"), // Temperature minimum
+          tmax: Number(weatherInfo.tmax?.toFixed(1) || "30.0"), // Temperature maximum
+          prcp: Number(weatherInfo.prcp?.toFixed(1) || "0.0"), // Precipitation
+          wdir: Number(weatherInfo.wdir?.toFixed(0) || "180"), // Wind direction
+          wspd: Number(weatherInfo.wspd?.toFixed(1) || "10.5"), // Wind speed
+          pres: Number(weatherInfo.pres?.toFixed(1) || "1013.2"), // Pressure
+        },
+      ],
+    };
+
+    console.log("Weather data received and formatted:", formattedData);
+    return formattedData;
   } catch (error) {
     console.error("Error fetching weather data:", error);
-    // En caso de error, devolver datos por defecto para desarrollo
+    // Return default data in case of error with proper formatting
     return {
       data: [
         {
-          tavg: 25,
-          tmin: 20,
-          tmax: 30,
-          prcp: 0,
+          tavg: 25.5,
+          tmin: 20.0,
+          tmax: 30.0,
+          prcp: 0.0,
           wdir: 180,
-          wspd: 10,
-          pres: 1013,
+          wspd: 10.5,
+          pres: 1013.2,
         },
       ],
     };
@@ -142,29 +160,39 @@ export const getWeatherData = async (
 export const predictTemperature = async (
   data: ClimaFormatter
 ): Promise<TemperaturePredictionResponse> => {
-  const url = `${BACKEND_BASE_URL}/predict/`;
+  const url = "http://localhost:8000/api/prediction/predict/";
 
+  // Ensure all values are properly formatted with the exact names and types expected by the model
   const requestBody = {
-    tavg: data.tavg,
-    tmin: data.tmin,
-    tmax: data.tmax,
-    prcp: data.prcp,
-    wdir: data.wdir,
-    wspd: data.wspd,
-    pres: data.pres,
-    latitude: data.latitude,
-    longitude: data.longitude,
+    tavg: Number(data.tavg.toFixed(1)), // Temperature average
+    tmin: Number(data.tmin.toFixed(1)), // Temperature minimum
+    tmax: Number(data.tmax.toFixed(1)), // Temperature maximum
+    prcp: Number(data.prcp.toFixed(1)), // Precipitation
+    wdir: Number(data.wdir.toFixed(0)), // Wind direction (in degrees)
+    wspd: Number(data.wspd.toFixed(1)), // Wind speed
+    pres: Number(data.pres.toFixed(1)), // Atmospheric pressure
+    latitude: Number(data.latitude.toFixed(4)), // Latitude
+    longitude: Number(data.longitude.toFixed(4)), // Longitude
   };
 
-  console.log("Sending temperature prediction request:", requestBody);
+  console.log(
+    "Sending temperature prediction request with formatted data:",
+    requestBody
+  );
 
-  return makeRequest<TemperaturePredictionResponse>(url, {
+  const response = await makeRequest<TemperaturePredictionResponse>(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(requestBody),
   });
+
+  // Format the predicted temperature to 1 decimal place
+  response.temperatura_predicha =
+    Math.round(response.temperatura_predicha * 10) / 10;
+
+  return response;
 };
 
 // ==================== GENERACIÓN DE ITINERARIO ====================
@@ -177,7 +205,7 @@ export const predictTemperature = async (
 export const generateItinerary = async (
   request: ItineraryRequest
 ): Promise<string> => {
-  const url = `${BACKEND_BASE_URL}/itinerary/`;
+  const url = "http://localhost:8000/api/ai/itinerary/";
 
   const requestBody = {
     city: request.city,
