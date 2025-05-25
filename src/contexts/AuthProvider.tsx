@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect, createContext } from "react";
 import { firebaseApp } from "@/firebase/credentials";
 import { createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getFirestore, setDoc } from "firebase/firestore";
+import { getIdToken } from "firebase/auth";
 const auth = getAuth(firebaseApp);
 
 export interface AuthContextType {
@@ -9,6 +10,7 @@ export interface AuthContextType {
     register: (email: string, password: string, firstName: string, lastname: string) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    getToken: () => Promise<string | null>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,8 +55,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("Cerrando sesión");
   }
 
+  async function getToken(): Promise<string | null> {
+  const currentUser = auth.currentUser;
+  if (currentUser) {
+    return await getIdToken(currentUser);
+  }
+  return null;
+}
+
   return (
-    <AuthContext.Provider value={{ user, register, login, logout }}>
+    <AuthContext.Provider value={{ user, register, login, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );
