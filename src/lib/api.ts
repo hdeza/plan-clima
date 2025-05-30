@@ -23,6 +23,24 @@ export interface TemperaturePredictionResponse {
   temperatura_predicha: number;
 }
 
+// NUEVAS INTERFACES PARA LA RESPUESTA DE GEMINI
+export interface Activity {
+  hour: string;
+  description: string;
+  state: string; // "pendiente", "realizada", "cancelada"
+}
+
+export interface ItineraryData {
+  city: string;
+  predicted_temperature: number;
+  state: string; // "planificado", "en_curso", "finalizado"
+}
+
+export interface GeminiItineraryResponse {
+  itinerary: ItineraryData;
+  activities: Activity[];
+}
+
 export interface ItineraryRequest {
   city: string;
   temperature: number;
@@ -39,6 +57,12 @@ export interface WeatherResponse {
     wspd: number;
     pres: number;
   }>;
+}
+
+// INTERFACE PARA VALIDACIÓN
+export interface ValidationResult {
+  isValid: boolean;
+  error?: string;
 }
 
 // Configuración de APIs
@@ -75,6 +99,78 @@ const makeRequest = async <T>(
     console.error(`API request failed: ${url}`, error);
     throw error;
   }
+};
+
+/**
+ * Validates trip data before creating a trip
+ * @param city - Selected city name
+ * @param coordinates - City coordinates
+ * @param days - Number of days for the trip
+ * @returns ValidationResult with isValid flag and error message if invalid
+ */
+export const validateTripData = (
+  city: string,
+  coordinates: Coordenadas,
+  days: number
+): ValidationResult => {
+  // Check if city is provided and not empty
+  if (!city || city.trim().length === 0) {
+    return {
+      isValid: false,
+      error: "Please select a valid city",
+    };
+  }
+
+  // Check if coordinates are valid
+  if (
+    !coordinates ||
+    typeof coordinates.lat !== "number" ||
+    typeof coordinates.lng !== "number" ||
+    coordinates.lat === 0 ||
+    coordinates.lng === 0
+  ) {
+    return {
+      isValid: false,
+      error: "Invalid coordinates. Please select a city from the suggestions.",
+    };
+  }
+
+  // Check if latitude is within valid range (-90 to 90)
+  if (coordinates.lat < -90 || coordinates.lat > 90) {
+    return {
+      isValid: false,
+      error: "Invalid latitude. Please select a valid location.",
+    };
+  }
+
+  // Check if longitude is within valid range (-180 to 180)
+  if (coordinates.lng < -180 || coordinates.lng > 180) {
+    return {
+      isValid: false,
+      error: "Invalid longitude. Please select a valid location.",
+    };
+  }
+
+  // Check if days is provided and is a valid number
+  if (!days || typeof days !== "number" || days <= 0) {
+    return {
+      isValid: false,
+      error: "Please select a valid number of days (1-4)",
+    };
+  }
+
+  // Check if days is within allowed range (assuming 1-4 days based on your select options)
+  if (days < 1 || days > 4) {
+    return {
+      isValid: false,
+      error: "Number of days must be between 1 and 4",
+    };
+  }
+
+  // If all validations pass
+  return {
+    isValid: true,
+  };
 };
 
 // ==================== SERVICIOS METEOROLÓGICOS ====================
@@ -198,13 +294,13 @@ export const predictTemperature = async (
 // ==================== GENERACIÓN DE ITINERARIO ====================
 
 /**
- * Genera un itinerario usando Gemini AI
+ * Genera un itinerario usando Gemini AI. Ahora retorna un objeto estructurado.
  * @param request - Datos para generar el itinerario
- * @returns Promise con el itinerario generado
+ * @returns Promise con el itinerario generado (ahora un objeto GeminiItineraryResponse)
  */
 export const generateItinerary = async (
   request: ItineraryRequest
-): Promise<string> => {
+): Promise<GeminiItineraryResponse> => {
   const url = "http://localhost:8000/api/ai/itinerary/";
 
   const requestBody = {
@@ -215,7 +311,8 @@ export const generateItinerary = async (
 
   console.log("Sending itinerary generation request:", requestBody);
 
-  return makeRequest<string>(url, {
+  // makeRequest ya maneja el JSON, solo especificamos el tipo de retorno esperado
+  return makeRequest<GeminiItineraryResponse>(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -279,14 +376,14 @@ export const searchCities = async (query: string): Promise<CityResult[]> => {
   }
 };
 
-// ==================== FUNCIÓN COMPLETA DE PROCESAMIENTO ====================
+// ==================== FUNCIÓN COMPLETA DE PROCESAMIENTO (ACTUALIZADA) ====================
 
 /**
  * Procesa todo el flujo: obtiene clima, predice temperatura y genera itinerario
  * @param city - Nombre de la ciudad
  * @param coordinates - Coordenadas de la ciudad
  * @param days - Número de días del viaje
- * @returns Promise con todos los datos procesados
+ * @returns Promise con todos los datos procesados (ahora incluye GeminiItineraryResponse)
  */
 export const processCompleteTrip = async (
   city: string,
@@ -295,7 +392,7 @@ export const processCompleteTrip = async (
 ): Promise<{
   weatherData: WeatherResponse;
   predictedTemperature: number;
-  itinerary: string;
+  itineraryResponse: GeminiItineraryResponse; // Cambio aquí
 }> => {
   try {
     // 1. Obtener fecha actual
@@ -313,13 +410,8 @@ export const processCompleteTrip = async (
     // 2. Obtener datos meteorológicos
     const weatherData = await getWeatherData(coordinates, formattedDate);
 
-    if (!weatherData.data || weatherData.data.length === 0) {
-      throw new Error("No weather data available");
-    }
-
+    // 3. Preparar datos para la predicción de temperatura
     const weatherInfo = weatherData.data[0];
-
-    // 3. Preparar datos para predicción de temperatura
     const climaData: ClimaFormatter = {
       tavg: weatherInfo.tavg,
       tmin: weatherInfo.tmin,
@@ -332,70 +424,22 @@ export const processCompleteTrip = async (
       longitude: coordinates.lng,
     };
 
-    // 4. Predecir temperatura
+    // 4. Obtener predicción de temperatura
     const temperatureResponse = await predictTemperature(climaData);
-    const predictedTemperature =
-      Math.round(temperatureResponse.temperatura_predicha * 10) / 10;
+    const predictedTemperature = temperatureResponse.temperatura_predicha;
 
-    // 5. Generar itinerario
-    const itineraryRequest: ItineraryRequest = {
-      city,
+    // 5. Generar itinerario con la temperatura predicha
+    const itineraryResponse = await generateItinerary({
+      city: city,
       temperature: predictedTemperature,
-      days,
-    };
+      days: days,
+    });
 
-    const itinerary = await generateItinerary(itineraryRequest);
+    console.log("Complete trip process completed successfully.");
 
-    console.log("Complete trip process finished successfully");
-
-    return {
-      weatherData,
-      predictedTemperature,
-      itinerary,
-    };
+    return { weatherData, predictedTemperature, itineraryResponse };
   } catch (error) {
     console.error("Error in complete trip process:", error);
     throw error;
   }
-};
-
-// ==================== FUNCIONES DE VALIDACIÓN ====================
-
-/**
- * Valida que las coordenadas sean válidas
- */
-export const validateCoordinates = (coordinates: Coordenadas): boolean => {
-  return (
-    coordinates.lat !== 0 &&
-    coordinates.lng !== 0 &&
-    !isNaN(coordinates.lat) &&
-    !isNaN(coordinates.lng) &&
-    coordinates.lat >= -90 &&
-    coordinates.lat <= 90 &&
-    coordinates.lng >= -180 &&
-    coordinates.lng <= 180
-  );
-};
-
-/**
- * Valida los datos de entrada para crear un viaje
- */
-export const validateTripData = (
-  city: string,
-  coordinates: Coordenadas,
-  days: number
-): { isValid: boolean; error?: string } => {
-  if (!city.trim()) {
-    return { isValid: false, error: "City name is required" };
-  }
-
-  if (!validateCoordinates(coordinates)) {
-    return { isValid: false, error: "Invalid coordinates" };
-  }
-
-  if (!days || days < 1 || days > 10) {
-    return { isValid: false, error: "Days must be between 1 and 10" };
-  }
-
-  return { isValid: true };
 };
