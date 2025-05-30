@@ -4,70 +4,108 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Alert,
   IconButton,
   List,
   ListItem,
   ListItemText,
+  Snackbar,
+  SnackbarCloseReason,
   Typography,
 } from "@mui/material";
 import React, { useEffect } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { AuthContext } from "@/contexts/AuthProvider";
-import EditIcon from '@mui/icons-material/Edit';
+import EditIcon from "@mui/icons-material/Edit";
+import { useNavigate } from "react-router-dom";
+import { Itinerary } from "@/interfaces/Itinerary";
+import { Activity } from "@/interfaces/activity";
+import { itineraryService } from "@/services/itineraryService";
 
-interface Activity {
-  id: number;
-  hour: string;
-  description: string;
-  state: string;
-}
-
-interface Itinerary {
-  id: string;
-  city: string;
-  creation_date: string;
-  predicted_temperature: string;
-  state: string;
-  activities: Activity[];
-}
 
 
 export const ItineraryHistory = () => {
+  const navigate = useNavigate();
+
   const [expanded, setExpanded] = React.useState<string | false>(false);
+  const [alertMessage, setAlertMessage] = React.useState<string>("");
+  const [open, setOpen] = React.useState(false);
+  const [itineraries, setItineraries] = React.useState<Itinerary[]>([]);
+  
 
   const authContext = React.useContext(AuthContext);
 
-  const handleChange =(panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+  const handleChange =
+    (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
       setExpanded(isExpanded ? panel : false);
+    };
+
+  const getItineraries = async() => {
+    try{
+      const response = await itineraryService(authContext).getItineraries();
+      setItineraries(response);
+      console.log("Itineraries fetched successfully:", response);
+      
+    }catch (error) {
+      console.error("Error fetching itineraries:", error);
+      setAlertMessage("Failed to fetch itineraries. Please try again.");
+      setOpen(true);
+    }
+    
   };
 
-  
-  const getItineraries = (itinerary: Itinerary) => {
-    // Implement the logic to fetch itineraries from the server or state
-    console.log(`Fetching itineraries for ${itinerary.city}`);
-    // This is where you would typically make an API call to get the itineraries
-  }
-    
-  
-  const handleDeleteActivity = (itinerary: Itinerary ,activity: Activity) => {
+  const handleDeleteActivity = (activity: Activity) => {
     // Implement the logic to delete the activity from the itinerary
-    console.log(`Deleting activity ${activity.id} from itinerary ${itinerary.id}`);
-    // You might want to update the state or make an API call here
-  }
+    console.log(
+      `Deleting activity ${activity.id}`
+    );
+  };
 
-  const handleEditActivity = (itinerary: Itinerary, activity: Activity) => {
+  const handleEditActivity = (activity: Activity) => {
     // Implement the logic to edit the activity in the itinerary
-    console.log(`Editing activity ${activity.id} in itinerary ${itinerary.id}`);
+    console.log(`Editing activity ${activity.id}`);
     // Open a modal to edit the activity
-  }
+  };
 
   // Here we are going to implement the reder of the view when a activity is deleted or edited
-  useEffect(() => {}, []);
+  useEffect(() => {
+    // Fetch itineraries when the component mounts
+    const fetchItineraries = async () => {
+      try {
+        await getItineraries();
+      } catch (error) {
+        console.error("Error fetching itineraries:", error);
+        setAlertMessage("Failed to fetch itineraries. Please try again.");
+        setOpen(true);
+      }
+    };
+
+    fetchItineraries();
+  }, []); 
 
 
+  const handleLogout = async () => {
+    if (authContext && authContext.user) {
+      await authContext.logout();
+      setAlertMessage("Logout successful");
+      setOpen(true);
+      setTimeout(() => {
+        setOpen(false);
+        setAlertMessage("");
+      }, 3000); // Clear alert after 3 seconds
+      
+      navigate("/login");
+      // window.location.href = "/login";
+      
+    } else {
+      setOpen(true);
+      setAlertMessage("Logout failed. Please try again.");
+      console.error("AuthContext or logout function is not available.");
+    }
+  };
 
-  const itineraries = [
+  const itineraryTest = [
     {
       id: "1",
       city: "Cartagena",
@@ -94,99 +132,20 @@ export const ItineraryHistory = () => {
           state: "Completed",
         },
       ],
-    },
-    {
-      id: "2",
-      city: "Leticia",
-      creation_date: "2023-09-15",
-      predicted_temperature: "28°C",
-      state: "Completed",
-      activities: [
-        {
-          id: 3,
-          hour: "10:00",
-          description: "Visita al Parque Nacional Natural Amacayacu",
-          state: "Completed",
-        },
-        {
-          id: 4,
-          hour: "12:00",
-          description: "Almuerzo en restaurante local",
-          state: "Completed",
-        },
-      ],
-    },
-    {
-      id: "3",
-      city: "Santa Marta",
-      creation_date: "2023-08-20",
-      predicted_temperature: "26°C",
-      state: "Completed",
-      activities: [
-        {
-          id: 4,
-          hour: "10:00",
-          description: "Visita al Parque Tayrona",
-          state: "Completed",
-        },
-        {
-          id: 5,
-          hour: "12:00",
-          description: "Almuerzo en restaurante local",
-          state: "Completed",
-        },
-      ],
-    },
-    {
-      id: "4",
-      city: "Medellin",
-      creation_date: "2023-07-10",
-      predicted_temperature: "27°C",
-      state: "Completed",
-      activities: [
-        {
-          id: 5,
-          hour: "10:00",
-          description: "Visita al Parque Arví",
-          state: "Completed",
-        },
-        {
-          id: 6,
-          hour: "12:00",
-          description: "Almuerzo en restaurante local",
-          state: "Completed",
-        },
-      ],
-    },
-    {
-      id: "5",
-      city: "Monteria",
-      creation_date: "2023-06-05",
-      predicted_temperature: "25°C",
-      state: "Completed",
-      activities: [
-        {
-          id: 6,
-          hour: "10:00",
-          description: "Visita al Parque Ronda del Sinú",
-          state: "Completed",
-        },
-        {
-          id: 7,
-          hour: "12:00",
-          description: "Almuerzo en restaurante local",
-          state: "Completed",
-        },
-      ],
-    },
+    }
   ];
 
-  const handleLogout = async () => {
-    if (authContext && authContext.user) {
-      await authContext.logout();
-    } else {
-      console.error("AuthContext or logout function is not available.");
+ 
+
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === 'clickaway') {
+      return;
     }
+
+    setOpen(false);
   };
 
   return (
@@ -210,8 +169,8 @@ export const ItineraryHistory = () => {
             {itineraries.map((itinerary) => (
               <Accordion
                 key={itinerary.id}
-                expanded={expanded === itinerary.id}
-                onChange={handleChange(itinerary.id)}
+                expanded={expanded === String(itinerary.id)}
+                onChange={handleChange(String(itinerary.id))}
                 sx={{
                   backgroundColor: "rgba(255, 255, 255, 0.2)",
                   backdropFilter: "blur(8px)",
@@ -248,7 +207,18 @@ export const ItineraryHistory = () => {
                       color: "white",
                     }}
                   >
-                    {itinerary.city} - {itinerary.creation_date}
+                    <span>
+                      {itinerary.city} - {itinerary.creation_date instanceof Date ? itinerary.creation_date.toLocaleDateString() : itinerary.creation_date}
+                    </span>
+
+                    <Typography>
+                      <span>
+                        Predicted temperature: {itinerary.predicted_temperature}°C
+                      </span>
+
+                      <br />
+                      <span>Status: {itinerary.state}</span>
+                    </Typography>
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails
@@ -258,9 +228,7 @@ export const ItineraryHistory = () => {
                     padding: "16px",
                   }}
                 >
-                  <List
-                    
-                  >
+                  <List>
                     {itinerary.activities.map((activity) => (
                       <ListItem
                         key={activity.id}
@@ -279,11 +247,11 @@ export const ItineraryHistory = () => {
                         <ListItemText
                           primary={
                             <>
-                              <span>Actividad {activity.id}</span>
+                              <span>Activity {activity.id}</span>
                               <br />
                               <span>{activity.description}</span>
                               <br />
-                              <span>Estado: {activity.state}</span>
+                              <span>Status: {activity.state}</span>
                             </>
                           }
                         />
@@ -296,6 +264,18 @@ export const ItineraryHistory = () => {
           </div>
         </div>
       </div>
+      <div>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert
+          onClose={handleClose}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
+    </div>
       <Footer />
     </>
   );

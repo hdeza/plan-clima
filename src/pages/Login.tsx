@@ -2,7 +2,6 @@ import { AuthContext } from "@/contexts/AuthProvider";
 import Footer from "@/layouts/Footer";
 import Header from "@/layouts/Header";
 import { Alert } from "@mui/material";
-import { set } from "lodash";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 

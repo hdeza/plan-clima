@@ -20,22 +20,6 @@ interface ItineraryInfo {
   days: number;
 }
 
-interface Activities {
-  description: string;
-  status: string;
-  day: number;
-  itinerary: string;
-}
-
-interface ItineraryToSave {
-  city: string;
-  date: Date;
-  days: number;
-  status: string;
-  preditedTemperature: number;
-  activities: Activities[];
-  user: string;
-}
 
 // Weather Component - Soft Pastel Design
 const WeatherComponent: React.FC<{ dataInfo: ItineraryInfo }> = ({
