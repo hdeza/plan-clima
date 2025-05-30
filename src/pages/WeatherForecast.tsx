@@ -11,6 +11,7 @@ import {
   predictTemperature,
   type ClimaFormatter,
   getWeatherData,
+  type GeminiItineraryResponse,
 } from "@/lib/api";
 
 // Interfaces locales para el componente
@@ -20,189 +21,248 @@ interface ItineraryInfo {
   days: number;
 }
 
-
-// Weather Component - Soft Pastel Design
+// Weather Component - Enhanced Design
 const WeatherComponent: React.FC<{ dataInfo: ItineraryInfo }> = ({
   dataInfo,
 }) => (
-  <div className="p-6 mb-8 border border-blue-200 shadow-2xl rounded-2xl bg-gradient-to-r from-blue-100 via-purple-100 to-green-100">
-    <div className="flex items-center justify-between">
-      <div>
-        <h3 className="mb-2 text-2xl font-bold text-blue-900">
-          Weather in {dataInfo.city}
-        </h3>
-        <p className="mb-1 text-4xl font-bold text-blue-700">
-          {dataInfo.temperature}°C
-        </p>
-        <p className="text-base text-blue-600 opacity-80">
-          Perfect for exploring!
-        </p>
+  <div className="relative p-8 mb-8 overflow-hidden border border-blue-200 shadow-2xl rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    {/* Decorative background elements */}
+    <div className="absolute top-0 right-0 w-32 h-32 transform translate-x-16 -translate-y-16 bg-blue-200 rounded-full opacity-20"></div>
+    <div className="absolute bottom-0 left-0 w-24 h-24 transform -translate-x-12 translate-y-12 bg-purple-200 rounded-full opacity-20"></div>
+
+    <div className="relative z-10">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-blue-400 rounded-full bg-opacity-20">
+            <svg
+              className="w-8 h-8 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.4 4.4 0 003 15z"
+              />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-blue-900">
+              Weather Forecast
+            </h3>
+            <p className="text-lg text-blue-700 opacity-80">{dataInfo.city}</p>
+          </div>
+        </div>
+
+        <div className="text-right">
+          <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            {dataInfo.temperature}°C
+          </div>
+          <p className="text-sm font-medium text-blue-600 opacity-70">
+            Perfect for exploring!
+          </p>
+        </div>
       </div>
-      <div className="text-right">
-        <p className="text-lg font-medium text-blue-800">Duration</p>
-        <p className="text-2xl font-bold text-blue-700">{dataInfo.days} Days</p>
+
+      <div className="flex items-center justify-between p-4 bg-white bg-opacity-50 rounded-2xl backdrop-blur-sm">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-blue-800">Duration</p>
+          <p className="text-2xl font-bold text-blue-700">
+            {dataInfo.days} Days
+          </p>
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold text-blue-800">Status</p>
+          <p className="text-2xl font-bold text-green-600">Ready</p>
+        </div>
       </div>
     </div>
   </div>
 );
 
-// Itinerary Component - Soft Pastel Travel Design
-const ItineraryComponent: React.FC<{ dataItinerary: string }> = ({
-  dataItinerary,
-}) => {
-  // Split the itinerary into days
-  const days = dataItinerary
-    .split("\n\n")
-    .filter((day) => day.trim().toLowerCase().startsWith("day"));
+// Enhanced Itinerary Component with Save Button
+const ItineraryComponent: React.FC<{
+  dataItinerary: GeminiItineraryResponse;
+  onSaveItinerary: () => void;
+}> = ({ dataItinerary, onSaveItinerary }) => {
+  const { itinerary, activities } = dataItinerary;
+  const [savedMessage, setSavedMessage] = useState<string>("");
+
+  const handleSaveClick = () => {
+    onSaveItinerary();
+    setSavedMessage("Itinerary saved successfully!");
+    setTimeout(() => setSavedMessage(""), 3000);
+  };
+
+  // Group activities by day (assuming 3-4 activities per day)
+  const activitiesPerDay = Math.ceil(
+    activities.length / (itinerary.predicted_temperature > 25 ? 3 : 4)
+  );
+  const groupedActivities = [];
+  for (let i = 0; i < activities.length; i += activitiesPerDay) {
+    groupedActivities.push(activities.slice(i, i + activitiesPerDay));
+  }
 
   return (
-    <div className="p-6 mt-6 border border-blue-100 shadow-2xl bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-2xl">
+    <div className="p-8 mt-8 border border-blue-100 shadow-2xl bg-gradient-to-br from-white via-blue-50 to-purple-50 rounded-3xl">
+      {/* Header with Save Button */}
       <div className="flex items-center justify-between mb-8">
-        <h3 className="text-3xl font-extrabold text-blue-900">
-          Your Adventure Awaits
-        </h3>
-        <div className="flex items-center space-x-2">
-          <svg
-            className="w-6 h-6 text-blue-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div>
+          <h3 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+            Your Adventure Awaits
+          </h3>
+          <p className="text-xl text-blue-700 opacity-80">
+            Exploring {itinerary.city}
+          </p>
+        </div>
+
+        <div className="flex flex-col items-end space-y-3">
+          <button
+            onClick={handleSaveClick}
+            className="flex items-center px-6 py-3 space-x-2 text-white transition-all duration-300 transform bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl hover:from-green-600 hover:to-emerald-700 hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-green-200"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-            />
-          </svg>
-          <span className="text-sm font-medium text-blue-500">
-            Travel Itinerary
-          </span>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+              />
+            </svg>
+            <span className="font-semibold">Save Itinerary</span>
+          </button>
+
+          {savedMessage && (
+            <div className="px-4 py-2 text-sm text-green-800 bg-green-100 rounded-lg animate-fade-in">
+              {savedMessage}
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2">
+            <div
+              className={`w-3 h-3 rounded-full ${
+                itinerary.state === "planificado"
+                  ? "bg-blue-400"
+                  : "bg-gray-400"
+              }`}
+            ></div>
+            <span className="text-sm font-medium text-blue-600 capitalize">
+              {itinerary.state}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-10">
-        {days.map((day, index) => {
-          const [title, ...content] = day.split("\n");
-          const dayNumber = title.match(/\d+/)?.[0] || (index + 1).toString();
-          return (
+      {/* Activities grouped by days */}
+      <div className="space-y-8">
+        {groupedActivities.map((dayActivities, dayIndex) => (
+          <div key={dayIndex} className="relative">
+            <div className="sticky z-20 flex items-center mb-6 space-x-4 top-4">
+              <div className="flex items-center justify-center w-12 h-12 text-xl font-bold text-white rounded-full shadow-lg bg-gradient-to-r from-blue-500 to-purple-600">
+                {dayIndex + 1}
+              </div>
+              <h4 className="text-2xl font-bold text-blue-900">
+                Day {dayIndex + 1}
+              </h4>
+              <div className="flex-1 h-px bg-gradient-to-r from-blue-300 to-transparent"></div>
+            </div>
+
+            <div className="ml-6 space-y-6">
+              {dayActivities.map((activity, activityIndex) => (
+                <div
+                  key={`day-${dayIndex}-activity-${activityIndex}`}
+                  className="relative pl-8 group"
+                >
+                  {/* Timeline connector */}
+                  <div className="absolute left-0 w-4 h-4 transition-colors duration-300 transform -translate-x-2 bg-blue-400 border-4 border-white rounded-full shadow-lg top-6 group-hover:bg-purple-500"></div>
+                  {activityIndex < dayActivities.length - 1 && (
+                    <div className="absolute left-0 w-px h-full transform -translate-x-px bg-blue-200 top-10"></div>
+                  )}
+
+                  <div className="p-6 transition-all duration-300 border border-blue-100 shadow-lg rounded-2xl bg-gradient-to-br from-white via-blue-25 to-purple-25 hover:shadow-xl hover:scale-102">
+                    {/* Activity Header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="px-3 py-1 text-sm font-semibold text-blue-700 bg-blue-100 rounded-full">
+                          {activity.hour.substring(0, 5)}
+                        </div>
+                        <div
+                          className={`px-3 py-1 text-xs font-medium rounded-full ${
+                            activity.state === "pendiente"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : activity.state === "realizada"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {activity.state}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Activity Content */}
+                    <div className="space-y-3">
+                      <p className="leading-relaxed text-gray-700">
+                        {activity.description}
+                      </p>
+                    </div>
+
+                    {/* Decorative Element */}
+                    <div className="absolute top-0 right-0 w-20 h-20 transform translate-x-10 -translate-y-10">
+                      <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-200 to-purple-200 opacity-10"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Enhanced Travel Tips */}
+      <div className="p-8 mt-12 border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl">
+        <div className="flex items-center mb-6 space-x-3">
+          <div className="p-2 bg-blue-400 rounded-lg bg-opacity-20">
+            <svg
+              className="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h4 className="text-2xl font-bold text-blue-900">Travel Tips</h4>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {[
+            { icon: "👟", tip: "Pack comfortable walking shoes" },
+            { icon: "💧", tip: "Bring a reusable water bottle" },
+            { icon: "📸", tip: "Don't forget your camera" },
+            { icon: "🌤️", tip: "Check local weather forecast" },
+          ].map((item, index) => (
             <div
               key={index}
-              className="relative overflow-hidden transition-all duration-300 border border-blue-100 shadow-lg rounded-xl bg-gradient-to-br from-blue-50 via-white to-green-50 hover:shadow-2xl"
+              className="flex items-center p-4 space-x-3 transition-colors duration-200 bg-white rounded-xl hover:bg-blue-50"
             >
-              {/* Day Header */}
-              <div className="flex items-center p-6 bg-gradient-to-r from-blue-200 via-purple-200 to-green-200">
-                <div className="flex items-center justify-center w-10 h-10 mr-4 text-xl font-bold text-white bg-blue-400 rounded-full shadow bg-opacity-80">
-                  {dayNumber}
-                </div>
-                <h4 className="text-xl font-bold text-blue-900">{title}</h4>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-4">
-                {content.map((paragraph, pIndex) => (
-                  <div key={pIndex} className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    </div>
-                    <p className="leading-relaxed text-gray-700">{paragraph}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Decorative Elements */}
-              <div className="absolute top-0 right-0 w-24 h-24 transform translate-x-10 -translate-y-10">
-                <div className="w-full h-full bg-blue-200 rounded-full opacity-10"></div>
-              </div>
+              <span className="text-2xl">{item.icon}</span>
+              <span className="font-medium text-blue-700">{item.tip}</span>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Footer with Travel Tips */}
-      <div className="p-6 mt-10 border border-blue-100 bg-blue-50 rounded-xl">
-        <div className="flex items-center mb-4 space-x-3">
-          <svg
-            className="w-6 h-6 text-blue-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <h4 className="text-lg font-semibold text-blue-900">Travel Tips</h4>
+          ))}
         </div>
-        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <li className="flex items-center space-x-2 text-blue-700">
-            <svg
-              className="w-5 h-5 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>Pack comfortable walking shoes</span>
-          </li>
-          <li className="flex items-center space-x-2 text-blue-700">
-            <svg
-              className="w-5 h-5 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>Bring a reusable water bottle</span>
-          </li>
-          <li className="flex items-center space-x-2 text-blue-700">
-            <svg
-              className="w-5 h-5 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>Don't forget your camera</span>
-          </li>
-          <li className="flex items-center space-x-2 text-blue-700">
-            <svg
-              className="w-5 h-5 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <span>Check local weather forecast</span>
-          </li>
-        </ul>
       </div>
     </div>
   );
@@ -212,10 +272,12 @@ const MainPredictionComponent: React.FC = () => {
   // State variables
   const [city, setCity] = useState<string>("");
   const [suggestions, setSuggestions] = useState<CityResult[]>([]);
-  const [dataItinerary, setDataItinerary] = useState<string>("");
+  const [dataItinerary, setDataItinerary] =
+    useState<GeminiItineraryResponse | null>(null);
   const [showData, setShowData] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [loadingStep, setLoadingStep] = useState<string>("");
 
   // Refs
   const dataSectionRef = useRef<HTMLDivElement>(null);
@@ -247,7 +309,7 @@ const MainPredictionComponent: React.FC = () => {
         setSuggestions([]);
       }
     }, 300),
-    []
+    [setSuggestions]
   );
 
   // ==================== EVENT HANDLERS ====================
@@ -255,7 +317,7 @@ const MainPredictionComponent: React.FC = () => {
   const onCityInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setCity(query);
-    setError(""); // Clear any previous errors
+    setError("");
     debouncedSearch(query);
   };
 
@@ -270,7 +332,7 @@ const MainPredictionComponent: React.FC = () => {
       city: suggestion.name,
     }));
     setSuggestions([]);
-    setError(""); // Clear any previous errors
+    setError("");
   };
 
   const onChangeDays = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -278,14 +340,57 @@ const MainPredictionComponent: React.FC = () => {
     if (!isNaN(days)) {
       setShowData(false);
       setDataInfo((prev) => ({ ...prev, days }));
-      setError(""); // Clear any previous errors
+      setError("");
     }
+  };
+
+  // ==================== SAVE ITINERARY FUNCTION ====================
+
+  const handleSaveItinerary = () => {
+    if (!dataItinerary) return;
+
+    // Separate itinerary and activities
+    const itineraryData = {
+      city: dataItinerary.itinerary.city,
+      predicted_temperature: dataItinerary.itinerary.predicted_temperature,
+      state: dataItinerary.itinerary.state,
+      days: dataInfo.days,
+      created_at: new Date().toISOString(),
+    };
+
+    const activitiesData = dataItinerary.activities.map((activity, index) => ({
+      id: `activity_${index + 1}`,
+      hour: activity.hour,
+      description: activity.description,
+      state: activity.state,
+      day:
+        Math.floor(
+          index / Math.ceil(dataItinerary.activities.length / dataInfo.days)
+        ) + 1,
+    }));
+
+    // Log separated data
+    console.log("=== ITINERARY DATA ===");
+    console.log(JSON.stringify(itineraryData, null, 2));
+
+    console.log("\n=== ACTIVITIES DATA ===");
+    console.log(JSON.stringify(activitiesData, null, 2));
+
+    console.log("\n=== COMPLETE DATA STRUCTURE ===");
+    console.log({
+      itinerary: itineraryData,
+      activities: activitiesData,
+      summary: {
+        total_activities: activitiesData.length,
+        activities_per_day: activitiesData.length / dataInfo.days,
+        temperature_range: `${dataItinerary.itinerary.predicted_temperature}°C`,
+      },
+    });
   };
 
   // ==================== MAIN TRIP CREATION FUNCTION ====================
 
   const createTrip = async (): Promise<void> => {
-    // Validate input data
     const validation = validateTripData(
       city,
       coordinateCitySelected,
@@ -293,7 +398,6 @@ const MainPredictionComponent: React.FC = () => {
     );
     if (!validation.isValid) {
       setError(validation.error || "Invalid input data");
-      alert(validation.error || "Please check your input data");
       return;
     }
 
@@ -302,26 +406,21 @@ const MainPredictionComponent: React.FC = () => {
     setError("");
 
     try {
-      console.log("Starting trip creation with:", {
-        city: dataInfo.city,
-        coordinates: coordinateCitySelected,
-        days: dataInfo.days,
-      });
+      setLoadingStep("Fetching weather data...");
 
-      // Get current date in YYYY-MM-DD format
       const today = new Date();
       const formattedDate = `${today.getFullYear()}-${(today.getMonth() + 1)
         .toString()
         .padStart(2, "0")}-${today.getDate().toString().padStart(2, "0")}`;
 
-      // First, get the weather data from Meteostat
       const weatherData = await getWeatherData(
         coordinateCitySelected,
         formattedDate
       );
       const weatherInfo = weatherData.data[0];
 
-      // Prepare data for temperature prediction
+      setLoadingStep("Predicting temperature...");
+
       const climaData: ClimaFormatter = {
         tavg: weatherInfo.tavg,
         tmin: weatherInfo.tmin,
@@ -334,17 +433,16 @@ const MainPredictionComponent: React.FC = () => {
         longitude: coordinateCitySelected.lng,
       };
 
-      // Get temperature prediction
       const temperatureResponse = await predictTemperature(climaData);
       const predictedTemperature = temperatureResponse.temperatura_predicha;
 
-      // Update the temperature in the state
       setDataInfo((prev) => ({
         ...prev,
         temperature: predictedTemperature,
       }));
 
-      // Generate itinerary with the predicted temperature
+      setLoadingStep("Generating your personalized itinerary...");
+
       const itinerary = await generateItinerary({
         city: dataInfo.city,
         temperature: predictedTemperature,
@@ -353,49 +451,37 @@ const MainPredictionComponent: React.FC = () => {
 
       setDataItinerary(itinerary);
       setLoading(false);
+      setLoadingStep("");
       setShowData(true);
 
-      // Scroll to results
       setTimeout(() => {
         dataSectionRef.current?.scrollIntoView({
           behavior: "smooth",
           block: "start",
         });
       }, 100);
-
-      console.log("Trip creation completed successfully");
     } catch (error) {
       console.error("Error creating trip:", error);
       setLoading(false);
+      setLoadingStep("");
 
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       setError(errorMessage);
 
       // Show user-friendly error messages
-      let userMessage = "Error creating trip. Please try again.";
-
       if (errorMessage.includes("weather")) {
-        userMessage = "Unable to fetch weather data. Please try again later.";
+        setError("Unable to fetch weather data. Please try again later.");
       } else if (errorMessage.includes("temperatura")) {
-        userMessage = "Unable to predict temperature. Please try again.";
+        setError("Unable to predict temperature. Please try again.");
       } else if (errorMessage.includes("itinerary")) {
-        userMessage = "Unable to generate itinerary. Please try again.";
+        setError("Unable to generate itinerary. Please try again.");
       } else if (errorMessage.includes("coordinates")) {
-        userMessage = "Invalid location selected. Please choose another city.";
+        setError("Invalid location selected. Please choose another city.");
+      } else {
+        setError("Error creating trip. Please try again.");
       }
-
-      alert(userMessage);
     }
-  };
-
-  // ==================== LOADING STATE HELPER ====================
-
-  const getLoadingMessage = (): string => {
-    if (!loading) return "";
-
-    // You could make this more sophisticated by tracking which step is currently executing
-    return "Creating your perfect trip...";
   };
 
   // ==================== RENDER ====================
@@ -404,15 +490,22 @@ const MainPredictionComponent: React.FC = () => {
     <>
       <Header />
       <main className="relative w-full min-h-screen">
+        {/* Enhanced Loading Overlay */}
         {loading && (
-          <div className="fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black bg-opacity-50">
-            <div className="w-16 h-16 mb-4 border-8 border-white rounded-full border-opacity-30 border-t-white animate-spin"></div>
-            <p className="text-lg font-medium text-white">
-              {getLoadingMessage()}
-            </p>
-            <p className="mt-2 text-sm text-white opacity-75">
-              This may take a few moments...
-            </p>
+          <div className="fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black bg-opacity-60 backdrop-blur-sm">
+            <div className="flex flex-col items-center p-8 bg-white shadow-2xl rounded-3xl">
+              <div className="relative w-20 h-20 mb-6">
+                <div className="absolute inset-0 border-4 border-blue-200 rounded-full"></div>
+                <div className="absolute inset-0 border-4 rounded-full border-t-blue-600 animate-spin"></div>
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-gray-800">
+                Creating Your Perfect Trip
+              </h3>
+              <p className="text-lg font-medium text-blue-600">{loadingStep}</p>
+              <p className="mt-2 text-sm text-gray-500">
+                This may take a few moments...
+              </p>
+            </div>
           </div>
         )}
 
@@ -422,41 +515,58 @@ const MainPredictionComponent: React.FC = () => {
           className="absolute object-cover w-full h-full saturate-150 brightness-50"
         />
 
-        <article className="absolute inset-0 flex flex-col items-center justify-center px-4 space-y-6 text-center text-white">
-          <div>
-            <h2 className="mb-4 text-4xl font-black lg:text-6xl">
+        <article className="absolute inset-0 flex flex-col items-center justify-center px-4 space-y-8 text-center text-white">
+          <div className="max-w-4xl">
+            <h1 className="mb-6 text-5xl font-black text-transparent lg:text-7xl bg-clip-text bg-gradient-to-r from-white to-blue-200">
               Discover Your Perfect Trip
-            </h2>
-            <p className="font-light lg:text-lg">
+            </h1>
+            <p className="text-xl font-light lg:text-2xl opacity-90">
               Get personalized travel recommendations based on AI-powered
               weather predictions
             </p>
           </div>
 
           {error && (
-            <div className="max-w-md p-4 mx-auto bg-red-500 rounded-lg bg-opacity-90">
-              <p className="text-sm text-white">{error}</p>
+            <div className="max-w-md p-6 mx-auto bg-red-500 rounded-2xl bg-opacity-90 backdrop-blur-sm">
+              <div className="flex items-center space-x-3">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p className="text-sm font-medium text-white">{error}</p>
+              </div>
             </div>
           )}
 
-          <div className="relative w-56 md:w-64 lg:w-96">
+          <div className="relative w-full max-w-lg">
             <input
               type="text"
               onChange={onCityInput}
               value={city}
               placeholder="Search for a city..."
-              className="w-full py-2 text-center text-white placeholder-white transition-colors bg-transparent border-b-2 border-white hover:border-orange-500 lg:text-lg focus:outline-none focus:border-orange-500"
+              className="w-full px-6 py-4 text-lg text-gray-800 placeholder-gray-500 transition-all duration-300 bg-white shadow-2xl rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-300 focus:shadow-xl"
               disabled={loading}
             />
             {suggestions.length > 0 && !loading && (
-              <ul className="absolute left-0 right-0 z-10 overflow-y-auto text-black bg-white rounded-md shadow-lg top-full max-h-48">
+              <ul className="absolute left-0 right-0 z-10 mt-2 overflow-y-auto bg-white shadow-2xl rounded-2xl top-full max-h-48">
                 {suggestions.map((suggestion) => (
                   <li
                     key={`${suggestion.lat}_${suggestion.lng}_${suggestion.display_name}`}
                     onClick={() => selectCity(suggestion)}
-                    className="p-3 text-left border-b border-gray-200 cursor-pointer hover:bg-gray-100 last:border-b-0"
+                    className="p-4 text-left transition-colors duration-200 border-b border-gray-100 cursor-pointer hover:bg-blue-50 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl"
                   >
-                    <div className="font-medium">{suggestion.name}</div>
+                    <div className="font-semibold text-gray-800">
+                      {suggestion.name}
+                    </div>
                     <div className="text-sm text-gray-600">
                       {suggestion.display_name}
                     </div>
@@ -469,38 +579,28 @@ const MainPredictionComponent: React.FC = () => {
           <select
             onChange={onChangeDays}
             value={dataInfo.days}
-            className="w-56 py-2 text-center text-white transition-colors bg-transparent border-b-2 border-white hover:border-orange-500 md:w-64 lg:w-96 lg:text-lg focus:outline-none focus:border-orange-500"
+            className="w-full max-w-lg px-6 py-4 text-lg text-gray-800 transition-all duration-300 bg-white shadow-2xl rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-300"
             disabled={loading}
           >
-            <option className="text-sm bg-gray-800" value="">
-              Select number of days
-            </option>
-            <option className="text-sm bg-gray-800" value="1">
-              1 Day
-            </option>
-            <option className="text-sm bg-gray-800" value="2">
-              2 Days
-            </option>
-            <option className="text-sm bg-gray-800" value="3">
-              3 Days
-            </option>
-            <option className="text-sm bg-gray-800" value="4">
-              4 Days
-            </option>
+            <option value="">Select number of days</option>
+            <option value="1">1 Day Adventure</option>
+            <option value="2">2 Day Journey</option>
+            <option value="3">3 Day Exploration</option>
+            <option value="4">4 Day Experience</option>
           </select>
 
           <button
             onClick={createTrip}
             disabled={!city || !dataInfo.days || loading}
-            className="flex items-center justify-center p-3 space-x-3 font-bold text-white transition-all duration-300 transform bg-gray-400 rounded-full shadow-xl bg-opacity-45 hover:bg-orange-500 hover:shadow-2xl lg:text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 disabled:hover:scale-100"
+            className="flex items-center justify-center px-8 py-4 space-x-4 text-xl font-bold text-white transition-all duration-300 transform shadow-2xl bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl hover:from-blue-700 hover:to-purple-700 hover:shadow-3xl disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-blue-300"
           >
-            <span>{loading ? "Creating Trip..." : "Create Trip"}</span>
-            <div className="flex items-center justify-center p-2 bg-white rounded-full">
+            <span>{loading ? "Creating Trip..." : "Create My Trip"}</span>
+            <div className="flex items-center justify-center">
               {loading ? (
-                <div className="w-5 h-5 border-2 border-gray-400 rounded-full border-t-orange-500 animate-spin"></div>
+                <div className="w-6 h-6 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
               ) : (
                 <svg
-                  className="w-5 h-5 text-gray-600"
+                  className="w-6 h-6"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -511,21 +611,26 @@ const MainPredictionComponent: React.FC = () => {
             </div>
           </button>
 
-          {/* Info about the process */}
-          <div className="max-w-md text-xs opacity-75">
+          <div className="max-w-2xl text-sm opacity-75">
             <p>
-              We use AI to predict weather conditions and create personalized
-              itineraries
+              ✨ We use advanced AI to predict weather conditions and create
+              personalized itineraries tailored just for you
             </p>
           </div>
         </article>
       </main>
 
-      {showData && (
-        <div ref={dataSectionRef} className="min-h-screen p-4 bg-gray-50">
-          <div className="max-w-4xl mx-auto">
+      {showData && dataItinerary && (
+        <div
+          ref={dataSectionRef}
+          className="min-h-screen p-6 bg-gradient-to-br from-gray-50 to-blue-50"
+        >
+          <div className="max-w-6xl mx-auto">
             <WeatherComponent dataInfo={dataInfo} />
-            <ItineraryComponent dataItinerary={dataItinerary} />
+            <ItineraryComponent
+              dataItinerary={dataItinerary}
+              onSaveItinerary={handleSaveItinerary}
+            />
           </div>
         </div>
       )}
