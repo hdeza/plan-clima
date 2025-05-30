@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useContext } from "react";
 import { debounce } from "lodash";
 import Header from "@/layouts/Header";
+import { AuthContext, AuthContextType } from "@/contexts/AuthProvider"; // Import AuthContext here
 import {
   searchCities,
   validateTripData,
@@ -13,6 +14,8 @@ import {
   getWeatherData,
   type GeminiItineraryResponse,
 } from "@/lib/api";
+import { CreateItineraryRequest, transformItineraryDataForAPI } from "@/services/itineraryService";
+import { ActivityForCreation, transformActivitiesDataForAPI, useCompleteItineraryService } from "@/services/completeItineraryService";
 
 // Interfaces locales para el componente
 interface ItineraryInfo {
@@ -269,6 +272,11 @@ const ItineraryComponent: React.FC<{
 };
 
 const MainPredictionComponent: React.FC = () => {
+  // FIXED: Get AuthContext at the component level (where hooks are allowed)
+  const authContext = useContext(AuthContext);
+  const { saveCompleteItinerary } = useCompleteItineraryService();
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  
   // State variables
   const [city, setCity] = useState<string>("");
   const [suggestions, setSuggestions] = useState<CityResult[]>([]);
@@ -346,10 +354,62 @@ const MainPredictionComponent: React.FC = () => {
 
   // ==================== SAVE ITINERARY FUNCTION ====================
 
-  const handleSaveItinerary = () => {
+ const handleSaveItinerary = async () => {
     if (!dataItinerary) return;
 
-    // Separate itinerary and activities
+    setIsSaving(true);
+
+    try {
+      console.log("🚀 Starting to save itinerary to backend...");
+
+      // Transformar datos del itinerario para la API
+      const itineraryForAPI = transformItineraryDataForAPI(
+        dataItinerary.itinerary.city,
+        dataItinerary.itinerary.predicted_temperature,
+        dataItinerary.itinerary.state
+      );
+
+      // Transformar actividades para la API
+      const activitiesForAPI = transformActivitiesDataForAPI(
+        dataItinerary.activities.map((activity) => ({
+          hour: activity.hour,
+          description: activity.description,
+          state: activity.state,
+        }))
+      );
+
+      console.log("📝 Data prepared for API:");
+      console.log("Itinerary:", itineraryForAPI);
+      console.log("Activities:", activitiesForAPI);
+
+      // Guardar itinerario completo (itinerario + actividades)
+      const result = await saveCompleteItinerary(
+        authContext,
+        itineraryForAPI,
+        activitiesForAPI
+      );
+
+      console.log("✅ Save completed successfully:", result);
+
+      // Mostrar mensaje de éxito con detalles
+      let alertMessage = `🎉 ${result.message}\n\nItinerary ID: ${result.itinerary.id}\nActivities saved: ${result.activities.length}`;
+
+      if (result.failedActivities && result.failedActivities.length > 0) {
+        alertMessage += `\nFailed activities: ${result.failedActivities.length}`;
+      }
+
+      alert(alertMessage);
+    } catch (error) {
+      console.error("❌ Error saving itinerary:", error);
+
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to save itinerary";
+      alert(`❌ Error: ${errorMessage}`);
+    } finally {
+      setIsSaving(false);
+    }
+
+    // Log separated data for debugging (mantener el logging original)
     const itineraryData = {
       city: dataItinerary.itinerary.city,
       predicted_temperature: dataItinerary.itinerary.predicted_temperature,
@@ -369,26 +429,12 @@ const MainPredictionComponent: React.FC = () => {
         ) + 1,
     }));
 
-    // Log separated data
-    console.log("=== ITINERARY DATA ===");
-    console.log(JSON.stringify(itineraryData, null, 2));
-
-    console.log("\n=== ACTIVITIES DATA ===");
-    console.log(JSON.stringify(activitiesData, null, 2));
-
-    console.log("\n=== COMPLETE DATA STRUCTURE ===");
-    console.log({
-      itinerary: itineraryData,
-      activities: activitiesData,
-      summary: {
-        total_activities: activitiesData.length,
-        activities_per_day: activitiesData.length / dataInfo.days,
-        temperature_range: `${dataItinerary.itinerary.predicted_temperature}°C`,
-      },
-    });
+    console.log("=== FRONTEND DATA STRUCTURE (for reference) ===");
+    console.log("Itinerary Data:", JSON.stringify(itineraryData, null, 2));
+    console.log("Activities Data:", JSON.stringify(activitiesData, null, 2));
   };
 
-  // ==================== MAIN TRIP CREATION FUNCTION ====================
+  // ==================== MAIN TRIP CREATION FUNCTION (FIXED) ====================
 
   const createTrip = async (): Promise<void> => {
     const validation = validateTripData(
@@ -406,6 +452,9 @@ const MainPredictionComponent: React.FC = () => {
     setError("");
 
     try {
+      // FIXED: Get token here where hooks are allowed
+      const token = authContext ? await authContext.getToken() : undefined;
+
       setLoadingStep("Fetching weather data...");
 
       const today = new Date();
@@ -433,7 +482,8 @@ const MainPredictionComponent: React.FC = () => {
         longitude: coordinateCitySelected.lng,
       };
 
-      const temperatureResponse = await predictTemperature(climaData);
+      // FIXED: Pass token to the function
+      const temperatureResponse = await predictTemperature(climaData, token ?? undefined);
       const predictedTemperature = temperatureResponse.temperatura_predicha;
 
       setDataInfo((prev) => ({
@@ -443,11 +493,12 @@ const MainPredictionComponent: React.FC = () => {
 
       setLoadingStep("Generating your personalized itinerary...");
 
+      // FIXED: Pass token to the function
       const itinerary = await generateItinerary({
         city: dataInfo.city,
         temperature: predictedTemperature,
         days: dataInfo.days,
-      });
+      }, token ?? undefined);
 
       setDataItinerary(itinerary);
       setLoading(false);
@@ -639,3 +690,5 @@ const MainPredictionComponent: React.FC = () => {
 };
 
 export default MainPredictionComponent;
+
+

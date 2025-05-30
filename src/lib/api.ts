@@ -1,7 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// lib/api.ts
+// lib/api.ts - Fixed version
 
-// Interfaces
+// Remove the React import and AuthContext usage from this file
+// import React from "react"; // Remove this
+// import { AuthContext } from "@/contexts/AuthProvider"; // Remove this
+
+// Keep all your existing interfaces...
 export interface Coordenadas {
   lat: number;
   lng: number;
@@ -23,17 +26,16 @@ export interface TemperaturePredictionResponse {
   temperatura_predicha: number;
 }
 
-// NUEVAS INTERFACES PARA LA RESPUESTA DE GEMINI
 export interface Activity {
   hour: string;
   description: string;
-  state: string; // "pendiente", "realizada", "cancelada"
+  state: string;
 }
 
 export interface ItineraryData {
   city: string;
   predicted_temperature: number;
-  state: string; // "planificado", "en_curso", "finalizado"
+  state: string;
 }
 
 export interface GeminiItineraryResponse {
@@ -59,24 +61,26 @@ export interface WeatherResponse {
   }>;
 }
 
-// INTERFACE PARA VALIDACIÓN
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
 }
 
-// Configuración de APIs
+export interface CityResult {
+  name: string;
+  lat: number;
+  lng: number;
+  display_name: string;
+}
+
+// Configuration
 const WEATHER_CONFIG = {
   API_URL: "https://meteostat.p.rapidapi.com/point/daily",
   API_KEY: "b1932eaad6msh4b2d6ba5ad36701p1dd6ccjsn90affbdb3cc4",
   API_HOST: "meteostat.p.rapidapi.com",
 };
 
-// ==================== FUNCIONES DE UTILIDAD ====================
-
-/**
- * Función genérica para hacer peticiones HTTP
- */
+// Generic request function
 const makeRequest = async <T>(
   url: string,
   options: RequestInit
@@ -101,19 +105,12 @@ const makeRequest = async <T>(
   }
 };
 
-/**
- * Validates trip data before creating a trip
- * @param city - Selected city name
- * @param coordinates - City coordinates
- * @param days - Number of days for the trip
- * @returns ValidationResult with isValid flag and error message if invalid
- */
+// Validation function (unchanged)
 export const validateTripData = (
   city: string,
   coordinates: Coordenadas,
   days: number
 ): ValidationResult => {
-  // Check if city is provided and not empty
   if (!city || city.trim().length === 0) {
     return {
       isValid: false,
@@ -121,7 +118,6 @@ export const validateTripData = (
     };
   }
 
-  // Check if coordinates are valid
   if (
     !coordinates ||
     typeof coordinates.lat !== "number" ||
@@ -135,7 +131,6 @@ export const validateTripData = (
     };
   }
 
-  // Check if latitude is within valid range (-90 to 90)
   if (coordinates.lat < -90 || coordinates.lat > 90) {
     return {
       isValid: false,
@@ -143,7 +138,6 @@ export const validateTripData = (
     };
   }
 
-  // Check if longitude is within valid range (-180 to 180)
   if (coordinates.lng < -180 || coordinates.lng > 180) {
     return {
       isValid: false,
@@ -151,7 +145,6 @@ export const validateTripData = (
     };
   }
 
-  // Check if days is provided and is a valid number
   if (!days || typeof days !== "number" || days <= 0) {
     return {
       isValid: false,
@@ -159,7 +152,6 @@ export const validateTripData = (
     };
   }
 
-  // Check if days is within allowed range (assuming 1-4 days based on your select options)
   if (days < 1 || days > 4) {
     return {
       isValid: false,
@@ -167,20 +159,12 @@ export const validateTripData = (
     };
   }
 
-  // If all validations pass
   return {
     isValid: true,
   };
 };
 
-// ==================== SERVICIOS METEOROLÓGICOS ====================
-
-/**
- * Obtiene datos meteorológicos usando Meteostat API (RapidAPI)
- * @param coordenada - Coordenadas de ubicación
- * @param dateT - Fecha en formato YYYY-MM-DD
- * @returns Promise con datos meteorológicos
- */
+// Weather function (unchanged)
 export const getWeatherData = async (
   coordenada: Coordenadas,
   dateT: string
@@ -207,20 +191,17 @@ export const getWeatherData = async (
       throw new Error("No weather data available");
     }
 
-    // Get the most recent weather data
     const weatherInfo = response.data[0];
-
-    // Format the data to match our needs with proper precision
     const formattedData: WeatherResponse = {
       data: [
         {
-          tavg: Number(weatherInfo.tavg?.toFixed(1) || "25.5"), // Temperature average
-          tmin: Number(weatherInfo.tmin?.toFixed(1) || "20.0"), // Temperature minimum
-          tmax: Number(weatherInfo.tmax?.toFixed(1) || "30.0"), // Temperature maximum
-          prcp: Number(weatherInfo.prcp?.toFixed(1) || "0.0"), // Precipitation
-          wdir: Number(weatherInfo.wdir?.toFixed(0) || "180"), // Wind direction
-          wspd: Number(weatherInfo.wspd?.toFixed(1) || "10.5"), // Wind speed
-          pres: Number(weatherInfo.pres?.toFixed(1) || "1013.2"), // Pressure
+          tavg: Number(weatherInfo.tavg?.toFixed(1) || "25.5"),
+          tmin: Number(weatherInfo.tmin?.toFixed(1) || "20.0"),
+          tmax: Number(weatherInfo.tmax?.toFixed(1) || "30.0"),
+          prcp: Number(weatherInfo.prcp?.toFixed(1) || "0.0"),
+          wdir: Number(weatherInfo.wdir?.toFixed(0) || "180"),
+          wspd: Number(weatherInfo.wspd?.toFixed(1) || "10.5"),
+          pres: Number(weatherInfo.pres?.toFixed(1) || "1013.2"),
         },
       ],
     };
@@ -229,7 +210,6 @@ export const getWeatherData = async (
     return formattedData;
   } catch (error) {
     console.error("Error fetching weather data:", error);
-    // Return default data in case of error with proper formatting
     return {
       data: [
         {
@@ -246,29 +226,23 @@ export const getWeatherData = async (
   }
 };
 
-// ==================== PREDICCIÓN DE TEMPERATURA ====================
-
-/**
- * Predice la temperatura usando tu modelo de Machine Learning
- * @param data - Datos meteorológicos formateados
- * @returns Promise con la temperatura predicha
- */
+// FIXED: Temperature prediction function now accepts token as parameter
 export const predictTemperature = async (
-  data: ClimaFormatter
+  data: ClimaFormatter,
+  token?: string // Add token as parameter
 ): Promise<TemperaturePredictionResponse> => {
-  const url = "http://localhost:8000/api/prediction/predict/";
+  const url = "http://localhost:8000/api/predict/";
 
-  // Ensure all values are properly formatted with the exact names and types expected by the model
   const requestBody = {
-    tavg: Number(data.tavg.toFixed(1)), // Temperature average
-    tmin: Number(data.tmin.toFixed(1)), // Temperature minimum
-    tmax: Number(data.tmax.toFixed(1)), // Temperature maximum
-    prcp: Number(data.prcp.toFixed(1)), // Precipitation
-    wdir: Number(data.wdir.toFixed(0)), // Wind direction (in degrees)
-    wspd: Number(data.wspd.toFixed(1)), // Wind speed
-    pres: Number(data.pres.toFixed(1)), // Atmospheric pressure
-    latitude: Number(data.latitude.toFixed(4)), // Latitude
-    longitude: Number(data.longitude.toFixed(4)), // Longitude
+    tavg: Number(data.tavg.toFixed(1)),
+    tmin: Number(data.tmin.toFixed(1)),
+    tmax: Number(data.tmax.toFixed(1)),
+    prcp: Number(data.prcp.toFixed(1)),
+    wdir: Number(data.wdir.toFixed(0)),
+    wspd: Number(data.wspd.toFixed(1)),
+    pres: Number(data.pres.toFixed(1)),
+    latitude: Number(data.latitude.toFixed(4)),
+    longitude: Number(data.longitude.toFixed(4)),
   };
 
   console.log(
@@ -280,28 +254,23 @@ export const predictTemperature = async (
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(requestBody),
   });
 
-  // Format the predicted temperature to 1 decimal place
   response.temperatura_predicha =
     Math.round(response.temperatura_predicha * 10) / 10;
 
   return response;
 };
 
-// ==================== GENERACIÓN DE ITINERARIO ====================
-
-/**
- * Genera un itinerario usando Gemini AI. Ahora retorna un objeto estructurado.
- * @param request - Datos para generar el itinerario
- * @returns Promise con el itinerario generado (ahora un objeto GeminiItineraryResponse)
- */
+// FIXED: Itinerary generation function now accepts token as parameter
 export const generateItinerary = async (
-  request: ItineraryRequest
+  request: ItineraryRequest,
+  token?: string // Add token as parameter
 ): Promise<GeminiItineraryResponse> => {
-  const url = "http://localhost:8000/api/ai/itinerary/";
+  const url = "http://localhost:8000/gemini/ai/itinerary/";
 
   const requestBody = {
     city: request.city,
@@ -311,33 +280,17 @@ export const generateItinerary = async (
 
   console.log("Sending itinerary generation request:", requestBody);
 
-  // makeRequest ya maneja el JSON, solo especificamos el tipo de retorno esperado
   return makeRequest<GeminiItineraryResponse>(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify(requestBody),
   });
 };
 
-// ==================== BÚSQUEDA DE CIUDADES ====================
-
-/**
- * Interface para resultados de búsqueda de ciudades
- */
-export interface CityResult {
-  name: string;
-  lat: number;
-  lng: number;
-  display_name: string;
-}
-
-/**
- * Busca ciudades usando Nominatim API (OpenStreetMap)
- * @param query - Término de búsqueda
- * @returns Promise con array de ciudades encontradas
- */
+// City search function (unchanged)
 export const searchCities = async (query: string): Promise<CityResult[]> => {
   if (query.length <= 2) return [];
 
@@ -376,26 +329,18 @@ export const searchCities = async (query: string): Promise<CityResult[]> => {
   }
 };
 
-// ==================== FUNCIÓN COMPLETA DE PROCESAMIENTO (ACTUALIZADA) ====================
-
-/**
- * Procesa todo el flujo: obtiene clima, predice temperatura y genera itinerario
- * @param city - Nombre de la ciudad
- * @param coordinates - Coordenadas de la ciudad
- * @param days - Número de días del viaje
- * @returns Promise con todos los datos procesados (ahora incluye GeminiItineraryResponse)
- */
+// FIXED: Complete trip processing function now accepts token as parameter
 export const processCompleteTrip = async (
   city: string,
   coordinates: Coordenadas,
-  days: number
+  days: number,
+  token?: string // Add token as parameter
 ): Promise<{
   weatherData: WeatherResponse;
   predictedTemperature: number;
-  itineraryResponse: GeminiItineraryResponse; // Cambio aquí
+  itineraryResponse: GeminiItineraryResponse;
 }> => {
   try {
-    // 1. Obtener fecha actual
     const today = new Date();
     const formattedDate = `${today.getFullYear()}-${(today.getMonth() + 1)
       .toString()
@@ -407,10 +352,8 @@ export const processCompleteTrip = async (
       days,
     });
 
-    // 2. Obtener datos meteorológicos
     const weatherData = await getWeatherData(coordinates, formattedDate);
 
-    // 3. Preparar datos para la predicción de temperatura
     const weatherInfo = weatherData.data[0];
     const climaData: ClimaFormatter = {
       tavg: weatherInfo.tavg,
@@ -424,16 +367,14 @@ export const processCompleteTrip = async (
       longitude: coordinates.lng,
     };
 
-    // 4. Obtener predicción de temperatura
-    const temperatureResponse = await predictTemperature(climaData);
+    const temperatureResponse = await predictTemperature(climaData, token);
     const predictedTemperature = temperatureResponse.temperatura_predicha;
 
-    // 5. Generar itinerario con la temperatura predicha
     const itineraryResponse = await generateItinerary({
       city: city,
       temperature: predictedTemperature,
       days: days,
-    });
+    }, token);
 
     console.log("Complete trip process completed successfully.");
 
